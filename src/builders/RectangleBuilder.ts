@@ -21,10 +21,25 @@ export default class RectangleBuilder extends AngledBuilder<Rectangle> {
     }
   }
 
-  rect_mu(event: MouseEvent) {
+  rect_ts(e: TouchEvent): any {
+    if (!this.rectOrigin) {
+      if (this.element?.editing) this.stopEdit();
+      this.rectOrigin = Util.touchPos(e);
+      this.createElement(new Rectangle());
+      this.svg
+        .touchmove((e: TouchEvent) => this.newRect_tm(e))
+        .touchend((e: TouchEvent) => this.rect_te(e));
+    }
+  }
+
+  rect_mu = (e: MouseEvent) => this.rect_upevent({X: e.offsetX, Y: e.offsetY}, false);
+
+  rect_te = (e: TouchEvent) => this.rect_upevent(Util.touchPos(e, true), true);
+
+  rect_upevent(point: Point, touch: boolean) {
     if (this.rectOrigin) {
-      if (Math.abs(this.rectOrigin.X - event.offsetX) < 10 ||
-        Math.abs(this.rectOrigin.Y - event.offsetY) < 10) {
+      if (Math.abs(this.rectOrigin.X - point.X) < 10 ||
+        Math.abs(this.rectOrigin.Y - point.Y) < 10) {
         this.removeElement();
         this.rectOrigin = undefined;
         return;
@@ -34,7 +49,8 @@ export default class RectangleBuilder extends AngledBuilder<Rectangle> {
         .forEach(point => {
           this.element!.discs.push(this.drawDisc(point[0], point[1], 2, '#000'))
         });
-      this.svg.off('mousemove').off('mouseup');
+      if(touch) this.svg.off('touchmove').off('touchend');
+      else this.svg.off('mousemove').off('mouseup');
       this.enlist(this.element.shape);
       this.rectOrigin = undefined;
     }
@@ -42,29 +58,38 @@ export default class RectangleBuilder extends AngledBuilder<Rectangle> {
 
   startDraw() {
     this.svg.mousedown((event: MouseEvent) => this.rect_md(event));
+    if(this.sd.touch) this.svg.addClass('pinch-zm').touchstart((event: TouchEvent) => this.rect_ts(event));
   }
 
   stopDraw() {
-    this.svg.off('mousedown').off('mouseup');
+    this.svg.off('mousedown').off('mouseup').off('touchstart').off('touchend');
   }
 
   newRect_mm(e: MouseEvent) {
-    if (this.rectOrigin) {
       if (e.buttons !== 1) return this.rect_mu(e);
+      this.newRect_moveevent(e.shiftKey, { X: e.offsetX, Y: e.offsetY});
+  }
+
+  newRect_tm(e: TouchEvent) {
+    this.newRect_moveevent(e.shiftKey, Util.touchPos(e));
+  }
+
+  newRect_moveevent(shiftKey: boolean, point: Point) {
+    if (this.rectOrigin) {
       let points: ArrayXY[] = [];
       points.push([this.rectOrigin.X, this.rectOrigin.Y]);
-      if (e.shiftKey) {
-        let diff = Math.min(Math.abs(this.rectOrigin.X - e.offsetX), Math.abs(this.rectOrigin.Y - e.offsetY));
-        let xSign = Math.sign(e.offsetX - this.rectOrigin.X);
-        let ySign = Math.sign(e.offsetY - this.rectOrigin.Y);
+      if (shiftKey) {
+        let diff = Math.min(Math.abs(this.rectOrigin.X - point.X), Math.abs(this.rectOrigin.Y - point.Y));
+        let xSign = Math.sign(point.X - this.rectOrigin.X);
+        let ySign = Math.sign(point.Y - this.rectOrigin.Y);
         points.push([this.rectOrigin.X, diff * ySign + this.rectOrigin.Y]);
         points.push([diff * xSign + this.rectOrigin.X, diff * ySign + this.rectOrigin.Y]);
         points.push([diff * xSign + this.rectOrigin.X, this.rectOrigin.Y]);
       }
       else {
-        points.push([this.rectOrigin.X, e.offsetY]);
-        points.push([e.offsetX, e.offsetY]);
-        points.push([e.offsetX, this.rectOrigin.Y]);
+        points.push([this.rectOrigin.X, point.Y]);
+        points.push([point.X, point.Y]);
+        points.push([point.X, this.rectOrigin.Y]);
       }
       points.push([this.rectOrigin.X, this.rectOrigin.Y]);
       this.element!.shape.points = points;

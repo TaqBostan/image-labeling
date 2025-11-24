@@ -72,6 +72,24 @@ export class SVGEl {
         return this;
     }
 
+    touchstart(cb: (ev: TouchEvent) => any) {
+        this.node.addEventListener('touchstart', cb);
+        this.register('touchstart', cb as EventListener);
+        return this;
+    }
+
+    touchmove(cb: (ev: TouchEvent) => any) {
+        this.node.addEventListener('touchmove', cb);
+        this.register('touchmove', cb as EventListener);
+        return this;
+    }
+
+    touchend(cb: (ev: TouchEvent) => any) {
+        this.node.addEventListener('touchend', cb);
+        this.register('touchend', cb as EventListener);
+        return this;
+    }
+
     click(cb: (ev: MouseEvent) => any) {
         this.node.addEventListener('click', cb);
         this.register('click', cb as EventListener);

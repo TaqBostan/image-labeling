@@ -5,6 +5,10 @@
   background-color: white;
 }
 
+.pinch-zm {
+  touch-action: pinch-zoom;
+}
+
 .il-hid {
   display: none;
 }

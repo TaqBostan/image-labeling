@@ -1,4 +1,4 @@
-import { ArrayXY } from "./types";
+import { ArrayXY, Point } from "./types";
 
 export default class Util {
   static ArrayXYSum = (...array: ArrayXY[]): ArrayXY =>
@@ -42,5 +42,11 @@ export default class Util {
       if(dim.match("^[0-9]*(\.[0-9]+)?(px)?$")) return parseInt(dim);
     }
     else return dim;
+  }
+
+  static touchPos = (e: TouchEvent, end = false) => {
+    const rect = (e.target as HTMLElement).parentElement!.getBoundingClientRect();
+    var touch = end ? e.changedTouches[0] : e.targetTouches[0];
+    return { X: touch.clientX - rect.left, Y: touch.clientY - rect.top };
   }
 }
